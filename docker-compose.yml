@@ -1,0 +1,42 @@
+networks:
+  network:
+    driver: bridge
+
+volumes:
+  pg_data:
+
+services:
+  web:
+    ports:
+      - ${WEB_PORT}:${WEB_PORT}
+    networks:
+      - network
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - SCRIPT=${SCRIPT:-entrypoint.sh}
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+  db:
+    networks:
+      - network
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: django
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '2309'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
