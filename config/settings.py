@@ -53,14 +53,15 @@ INSTALLED_APPS = [
     'storage',
 
     # Install apps
-
     'rest_framework',
     'drf_spectacular',
     'rest_framework_simplejwt',
+    'silk',
 
 ]
 
 MIDDLEWARE = [
+    'silk.middleware.SilkyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -151,7 +152,10 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'helpers.pagination.StandardPagination',
+    'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'helpers.base_mixin.custom_exception_handler',
 }
 
 SPECTACULAR_SETTINGS = {
