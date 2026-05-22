@@ -159,9 +159,18 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Orderix  API',
+    'TITLE': 'Orderix API',
     'DESCRIPTION': 'Orderix',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'TAGS': [
+        {'name': 'Auth', 'description': 'Autentifikatsiya'},
+        {'name': 'Users', 'description': 'Foydalanuvchilar'},
+        {'name': 'Restaurants', 'description': 'Restoranlar'},
+        {'name': 'Currencies', 'description': 'Valyutalar'},
+        {'name': 'Locations', 'description': 'Joylashuvlar'},
+        {'name': 'Menu', 'description': 'Menu kategoriyalari va mahsulotlar'},
+        {'name': 'Orders', 'description': 'Buyurtmalar'},
+    ],
 }
 APPEND_SLASH = False

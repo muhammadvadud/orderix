@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from restaurant.models import Restaurants, RestaurantSettings
 from restaurant.serializers.restaurant import (
@@ -15,6 +16,15 @@ from helpers.base_mixin import BaseViewSetMixin
 from helpers.permissions import IsManagerOrAdmin, IsAdmin
 
 
+@extend_schema_view(
+    list=extend_schema(tags=['Restaurants']),
+    retrieve=extend_schema(tags=['Restaurants']),
+    create=extend_schema(tags=['Restaurants']),
+    update=extend_schema(tags=['Restaurants']),
+    partial_update=extend_schema(tags=['Restaurants']),
+    destroy=extend_schema(tags=['Restaurants']),
+    restaurant_settings=extend_schema(tags=['Restaurants']),
+)
 class RestaurantViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = RestaurantListSerializer
     permission_classes = [IsAuthenticated]

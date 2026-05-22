@@ -2,6 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from restaurant.models import MenuCategory, MenuItems
 from restaurant.serializers.menu import (
@@ -13,6 +14,14 @@ from helpers.base_mixin import BaseViewSetMixin
 from helpers.permissions import IsManagerOrAdmin
 
 
+@extend_schema_view(
+    list=extend_schema(tags=['Menu']),
+    retrieve=extend_schema(tags=['Menu']),
+    create=extend_schema(tags=['Menu']),
+    update=extend_schema(tags=['Menu']),
+    partial_update=extend_schema(tags=['Menu']),
+    destroy=extend_schema(tags=['Menu']),
+)
 class MenuCategoryViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = MenuCategoryListSerializer
     permission_classes = [IsAuthenticated]
@@ -40,6 +49,14 @@ class MenuCategoryViewSet(BaseViewSetMixin, ModelViewSet):
         return MenuCategory.objects.filter(restaurant=self.request.user.restaurant)
 
 
+@extend_schema_view(
+    list=extend_schema(tags=['Menu']),
+    retrieve=extend_schema(tags=['Menu']),
+    create=extend_schema(tags=['Menu']),
+    update=extend_schema(tags=['Menu']),
+    partial_update=extend_schema(tags=['Menu']),
+    destroy=extend_schema(tags=['Menu']),
+)
 class MenuItemViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = MenuItemListSerializer
     permission_classes = [IsAuthenticated]

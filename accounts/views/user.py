@@ -2,6 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from accounts.models import Account
 from accounts.serializers.user import (
@@ -12,6 +13,14 @@ from helpers.base_mixin import BaseViewSetMixin
 from helpers.permissions import IsManagerOrAdmin
 
 
+@extend_schema_view(
+    list=extend_schema(tags=['Users']),
+    retrieve=extend_schema(tags=['Users']),
+    create=extend_schema(tags=['Users']),
+    update=extend_schema(tags=['Users']),
+    partial_update=extend_schema(tags=['Users']),
+    destroy=extend_schema(tags=['Users']),
+)
 class UserViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated]

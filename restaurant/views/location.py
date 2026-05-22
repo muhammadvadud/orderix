@@ -2,6 +2,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter, OrderingFilter
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from restaurant.models import Locations
 from restaurant.serializers.location import (
@@ -12,6 +13,14 @@ from helpers.base_mixin import BaseViewSetMixin
 from helpers.permissions import IsManagerOrAdmin
 
 
+@extend_schema_view(
+    list=extend_schema(tags=['Locations']),
+    retrieve=extend_schema(tags=['Locations']),
+    create=extend_schema(tags=['Locations']),
+    update=extend_schema(tags=['Locations']),
+    partial_update=extend_schema(tags=['Locations']),
+    destroy=extend_schema(tags=['Locations']),
+)
 class LocationViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = LocationListSerializer
     permission_classes = [IsAuthenticated]

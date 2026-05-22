@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from order.models import Order, OrderItems, OrderStatusChoices
 from order.serializers.order import (
@@ -16,6 +17,16 @@ from helpers.base_mixin import BaseViewSetMixin
 from helpers.permissions import IsManagerOrAdmin
 
 
+@extend_schema_view(
+    list=extend_schema(tags=['Orders']),
+    retrieve=extend_schema(tags=['Orders']),
+    create=extend_schema(tags=['Orders']),
+    partial_update=extend_schema(tags=['Orders']),
+    destroy=extend_schema(tags=['Orders']),
+    update_status=extend_schema(tags=['Orders']),
+    add_item=extend_schema(tags=['Orders']),
+    remove_item=extend_schema(tags=['Orders']),
+)
 class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = OrderListSerializer
     permission_classes = [IsAuthenticated]
