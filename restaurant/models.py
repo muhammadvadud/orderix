@@ -34,6 +34,9 @@ class RestaurantSettings(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='currency')
     restaurant = models.ForeignKey(Restaurants, on_delete=models.CASCADE, related_name='restaurant_settings')
     service_fee = models.DecimalField(max_digits=10, decimal_places=2)
+    notify_orders = models.BooleanField(default=True)
+    notify_staff = models.BooleanField(default=False)
+    notify_daily = models.BooleanField(default=True)
 
     def __str__(self):
         return self.restaurant.name
@@ -44,10 +47,37 @@ class RestaurantSettings(models.Model):
         verbose_name_plural = 'Restaurant Settings'
 
 
+class LocationTypeChoices(models.TextChoices):
+    ZONE = 'zone', 'Zone'
+    TABLE = 'table', 'Table'
+
+
+class TableStatusChoices(models.TextChoices):
+    FREE = 'free', 'Free'
+    OCCUPIED = 'occupied', 'Occupied'
+    RESERVED = 'reserved', 'Reserved'
+    DIRTY = 'dirty', 'Dirty'
+
+
 class Locations(models.Model):
     restaurant = models.ForeignKey(Restaurants, on_delete=models.CASCADE, related_name='locations')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    type = models.CharField(
+        max_length=10,
+        choices=LocationTypeChoices.choices,
+        default=LocationTypeChoices.ZONE
+    )
     name = models.CharField(max_length=200)
+    short = models.CharField(max_length=8, blank=True)
+    icon = models.CharField(max_length=50, blank=True)
+    color = models.CharField(max_length=7, blank=True)
+    number = models.PositiveIntegerField(null=True, blank=True)
+    seats = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=TableStatusChoices,
+        default=TableStatusChoices.FREE
+    )
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -62,6 +92,7 @@ class Locations(models.Model):
 class MenuCategory(models.Model):
     restaurant = models.ForeignKey(Restaurants, on_delete=models.CASCADE, related_name='menu_category')
     name = models.CharField(max_length=200)
+    icon = models.CharField(max_length=50, default='Utensils')
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -4,9 +4,15 @@ from django.contrib.auth import get_user_model
 
 
 class OrderStatusChoices(models.TextChoices):
-    OPEN = 'open', 'Open'
-    IN_PROGRESS = 'in_progress', 'In Progress'
+    PREPARING = 'preparing', 'Preparing'
+    DELIVERED = 'delivered', 'Delivered'
     CLOSED = 'closed', 'Closed'
+    CANCELLED = 'cancelled', 'Cancelled'
+
+
+class OrderItemStatusChoices(models.TextChoices):
+    PREPARING = 'preparing', 'Preparing'
+    DELIVERED = 'delivered', 'Delivered'
     CANCELLED = 'cancelled', 'Cancelled'
 
 
@@ -17,7 +23,7 @@ class Order(models.Model):
     status = models.CharField(
         max_length=20,
         choices=OrderStatusChoices.choices,
-        default=OrderStatusChoices.OPEN
+        default=OrderStatusChoices.PREPARING
     )
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     created = models.DateTimeField(auto_now_add=True)
@@ -38,6 +44,11 @@ class OrderItems(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=15, decimal_places=2)
     subtotal = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=OrderItemStatusChoices.choices,
+        default=OrderItemStatusChoices.PREPARING
+    )
 
     def __str__(self):
         return str(self.pk)

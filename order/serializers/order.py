@@ -58,7 +58,7 @@ class OrderCreateSerializer(serializers.Serializer):
 
         if Order.objects.filter(
             location_id=value,
-            status__in=[OrderStatusChoices.OPEN, OrderStatusChoices.IN_PROGRESS]
+            status__in=[OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED]
         ).exists():
             raise serializers.ValidationError("Bu lokatsiyada allaqachon aktiv buyurtma mavjud")
         return value
@@ -115,8 +115,8 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=OrderStatusChoices.choices)
 
     VALID_TRANSITIONS = {
-        OrderStatusChoices.OPEN: [OrderStatusChoices.IN_PROGRESS, OrderStatusChoices.CANCELLED],
-        OrderStatusChoices.IN_PROGRESS: [OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED],
+        OrderStatusChoices.PREPARING: [OrderStatusChoices.DELIVERED, OrderStatusChoices.CANCELLED],
+        OrderStatusChoices.DELIVERED: [OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED],
         OrderStatusChoices.CLOSED: [],
         OrderStatusChoices.CANCELLED: [],
     }

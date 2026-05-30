@@ -141,3 +141,6 @@ GitHub.sublime-settings
 staticfiles
 staticfiles/
 .idea
+
+# Backend reja (ichki hujjat)
+BACKEND_PLAN.md

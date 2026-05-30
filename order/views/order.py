@@ -87,7 +87,7 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     @action(detail=True, methods=['post'], url_path='items')
     def add_item(self, request, pk=None):
         order = self.get_object()
-        if order.status not in (OrderStatusChoices.OPEN, OrderStatusChoices.IN_PROGRESS):
+        if order.status not in (OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED):
             raise ValidationError("Yopilgan buyurtmaga taom qo'shib bo'lmaydi")
 
         serializer = OrderItemCreateSerializer(data=request.data)
@@ -113,7 +113,7 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     @action(detail=True, methods=['delete'], url_path=r'items/(?P<item_id>[^/.]+)')
     def remove_item(self, request, pk=None, item_id=None):
         order = self.get_object()
-        if order.status not in (OrderStatusChoices.OPEN, OrderStatusChoices.IN_PROGRESS):
+        if order.status not in (OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED):
             raise ValidationError("Yopilgan buyurtmadan taom o'chirib bo'lmaydi")
 
         try:
