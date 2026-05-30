@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 
-from order.models import Order, OrderItems, OrderStatusChoices
+from order.models import Order, OrderItems, OrderStatusChoices, OrderItemStatusChoices
 from restaurant.models import MenuItems, Locations, RestaurantSettings
 
 
@@ -21,6 +21,23 @@ class OrderItemCreateSerializer(serializers.Serializer):
     def validate_menu_item_id(self, value):
         if not MenuItems.objects.filter(pk=value, deleted_at__isnull=True).exists():
             raise serializers.ValidationError("Taom topilmadi")
+        return value
+
+
+class OrderItemStatusUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=OrderItemStatusChoices.choices)
+
+
+class OrderItemQuantityUpdateSerializer(serializers.Serializer):
+    quantity = serializers.IntegerField(min_value=1)
+
+
+class OrderItemsBulkSerializer(serializers.Serializer):
+    items = OrderItemCreateSerializer(many=True)
+
+    def validate_items(self, value):
+        if not value:
+            raise serializers.ValidationError("Kamida bitta taom bo'lishi kerak")
         return value
 
 

@@ -36,8 +36,11 @@ class BaseViewSetMixin(object):
         if response.status_code == 204:
             return super().finalize_response(request, response, *args, **kwargs)
 
-        # custom_exception_handler already wrapped error responses
-        if isinstance(response.data, dict) and "status" in response.data:
+        # custom_exception_handler already wrapped error responses.
+        # To'liq wrapper shaklini tekshiramiz, chunki serializer'da ham "status"
+        # maydoni bo'lishi mumkin (masalan, Order.status) — faqat "status" ga
+        # qarab bo'lmaydi.
+        if isinstance(response.data, dict) and {"status", "message", "data"} <= set(response.data.keys()):
             return super().finalize_response(request, response, *args, **kwargs)
 
         if response.status_code >= 400:
