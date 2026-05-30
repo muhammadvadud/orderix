@@ -58,10 +58,12 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework_simplejwt',
     'silk',
+    'corsheaders',
 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'silk.middleware.SilkyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -184,3 +186,10 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 APPEND_SLASH = False
+
+# CORS — frontend (Next.js) boshqa portda ishlaydi
+CORS_ALLOWED_ORIGINS = env.list(
+    'CORS_ALLOWED_ORIGINS',
+    default=['http://localhost:3000', 'http://127.0.0.1:3000'],
+)
+CORS_ALLOW_CREDENTIALS = True

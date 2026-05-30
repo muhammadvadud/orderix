@@ -2,6 +2,7 @@ asgiref==3.11.1
 django-silk==5.3.2
 attrs==26.1.0
 Django==6.0.4
+django-cors-headers==4.9.0
 django-environ==0.13.0
 django-stubs==6.0.2
 django-stubs-ext==6.0.2
