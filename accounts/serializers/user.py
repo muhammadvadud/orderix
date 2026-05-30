@@ -3,15 +3,21 @@ from accounts.models import Account
 
 
 class UserListSerializer(serializers.ModelSerializer):
+    avatar = serializers.CharField(read_only=True)
+
     class Meta:
         model = Account
-        fields = ('id', 'username', 'phone_number', 'role', 'restaurant', 'created_at')
+        fields = ('id', 'username', 'full_name', 'avatar', 'color', 'phone_number',
+                  'role', 'restaurant', 'created_at')
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    avatar = serializers.CharField(read_only=True)
+
     class Meta:
         model = Account
-        fields = ('id', 'username', 'phone_number', 'role', 'restaurant', 'tg_id', 'created_at')
+        fields = ('id', 'username', 'full_name', 'avatar', 'color', 'phone_number',
+                  'role', 'restaurant', 'tg_id', 'created_at')
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -19,7 +25,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ('id', 'username', 'phone_number', 'role', 'restaurant', 'tg_id', 'password')
+        fields = ('id', 'username', 'full_name', 'color', 'phone_number',
+                  'role', 'restaurant', 'tg_id', 'password')
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -32,4 +39,4 @@ class UserCreateSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ('username', 'phone_number', 'role', 'tg_id')
+        fields = ('username', 'full_name', 'color', 'phone_number', 'role', 'tg_id')

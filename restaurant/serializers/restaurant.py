@@ -8,13 +8,14 @@ class RestaurantSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RestaurantSettings
-        fields = ('id', 'currency', 'currency_name', 'service_fee')
+        fields = ('id', 'currency', 'currency_name', 'service_fee',
+                  'notify_orders', 'notify_staff', 'notify_daily')
 
 
 class RestaurantSettingsUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantSettings
-        fields = ('currency', 'service_fee')
+        fields = ('currency', 'service_fee', 'notify_orders', 'notify_staff', 'notify_daily')
 
 
 class RestaurantListSerializer(serializers.ModelSerializer):

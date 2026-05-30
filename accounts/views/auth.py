@@ -11,7 +11,9 @@ from accounts.serializers.auth import LoginSerializer
 from accounts.serializers.user import UserDetailSerializer
 
 
-@extend_schema(tags=['Auth'])
+@extend_schema(tags=['Auth'], summary="Login (telefon + parol)",
+               description="Telefon raqam va parol orqali tizimga kirish. access va refresh token hamda foydalanuvchi ma'lumotini qaytaradi.",
+               request=LoginSerializer, responses=LoginSerializer)
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -25,17 +27,21 @@ class LoginView(APIView):
         })
 
 
-@extend_schema(tags=['Auth'])
+@extend_schema(tags=['Auth'], summary="Tokenni yangilash",
+               description="refresh token orqali yangi access token oladi.")
 class TokenRefreshView(BaseTokenRefreshView):
     pass
 
 
-@extend_schema(tags=['Auth'])
+@extend_schema(tags=['Auth'], summary="Tokenni tekshirish",
+               description="Berilgan token amal qilishini tekshiradi.")
 class TokenVerifyView(BaseTokenVerifyView):
     pass
 
 
-@extend_schema(tags=['Auth'])
+@extend_schema(tags=['Auth'], summary="Joriy foydalanuvchi",
+               description="Token egasi bo'lgan foydalanuvchining profil ma'lumotini qaytaradi.",
+               responses=UserDetailSerializer)
 class GetMeView(APIView):
     permission_classes = [IsAuthenticated]
 

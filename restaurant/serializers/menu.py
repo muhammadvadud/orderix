@@ -6,19 +6,19 @@ from restaurant.models import MenuCategory, MenuItems
 class MenuCategoryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuCategory
-        fields = ('id', 'name', 'restaurant', 'created')
+        fields = ('id', 'name', 'icon', 'restaurant', 'created')
 
 
 class MenuCategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuCategory
-        fields = ('id', 'name', 'restaurant')
+        fields = ('id', 'name', 'icon', 'restaurant')
 
 
 class MenuCategoryUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuCategory
-        fields = ('name',)
+        fields = ('name', 'icon')
 
 
 class MenuItemListSerializer(serializers.ModelSerializer):

@@ -10,7 +10,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItems
-        fields = ('id', 'menu_item', 'menu_item_name', 'quantity', 'price', 'subtotal')
+        fields = ('id', 'menu_item', 'menu_item_name', 'quantity', 'price', 'subtotal', 'status')
         read_only_fields = ('price', 'subtotal')
 
 
@@ -25,8 +25,11 @@ class OrderItemCreateSerializer(serializers.Serializer):
 
 
 class OrderListSerializer(serializers.ModelSerializer):
-    waiter_name = serializers.CharField(source='waiter.username', read_only=True)
+    waiter_name = serializers.SerializerMethodField()
     location_name = serializers.CharField(source='location.name', read_only=True)
+
+    def get_waiter_name(self, obj) -> str:
+        return obj.waiter.full_name or obj.waiter.username
 
     class Meta:
         model = Order
@@ -36,9 +39,12 @@ class OrderListSerializer(serializers.ModelSerializer):
 
 
 class OrderDetailSerializer(serializers.ModelSerializer):
-    waiter_name = serializers.CharField(source='waiter.username', read_only=True)
+    waiter_name = serializers.SerializerMethodField()
     location_name = serializers.CharField(source='location.name', read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
+
+    def get_waiter_name(self, obj) -> str:
+        return obj.waiter.full_name or obj.waiter.username
 
     class Meta:
         model = Order

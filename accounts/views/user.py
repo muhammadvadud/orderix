@@ -14,12 +14,18 @@ from helpers.permissions import IsManagerOrAdmin
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Users']),
-    retrieve=extend_schema(tags=['Users']),
-    create=extend_schema(tags=['Users']),
-    update=extend_schema(tags=['Users']),
-    partial_update=extend_schema(tags=['Users']),
-    destroy=extend_schema(tags=['Users']),
+    list=extend_schema(tags=['Users'], summary="Xodimlar ro'yxati",
+                       description="Restoran xodimlari ro'yxatini qaytaradi (ism, telefon, rol, qo'shilgan sana). Ism yoki telefon bo'yicha qidirish mumkin."),
+    retrieve=extend_schema(tags=['Users'], summary="Xodim ma'lumoti",
+                           description="Bitta xodimning to'liq ma'lumotini qaytaradi."),
+    create=extend_schema(tags=['Users'], summary="Yangi xodim qo'shish",
+                         description="Yangi xodim yaratadi (full_name, telefon, rol, parol). Faqat menejer yoki admin."),
+    update=extend_schema(tags=['Users'], summary="Xodimni to'liq yangilash",
+                         description="Xodim ma'lumotlarini to'liq yangilaydi. Faqat menejer yoki admin."),
+    partial_update=extend_schema(tags=['Users'], summary="Xodimni qisman yangilash",
+                                 description="Xodimning ayrim maydonlarini yangilaydi. Faqat menejer yoki admin."),
+    destroy=extend_schema(tags=['Users'], summary="Xodimni o'chirish",
+                          description="Xodimni soft-delete qiladi (deleted_at belgilanadi). Faqat menejer yoki admin."),
 )
 class UserViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = UserListSerializer

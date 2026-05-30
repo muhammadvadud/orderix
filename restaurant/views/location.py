@@ -14,12 +14,18 @@ from helpers.permissions import IsManagerOrAdmin
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Locations']),
-    retrieve=extend_schema(tags=['Locations']),
-    create=extend_schema(tags=['Locations']),
-    update=extend_schema(tags=['Locations']),
-    partial_update=extend_schema(tags=['Locations']),
-    destroy=extend_schema(tags=['Locations']),
+    list=extend_schema(tags=['Locations'], summary="Lokatsiyalar ro'yxati",
+                       description="Zona va stollar ro'yxati. `type=zone|table` va `parent=ID` query paramlari bilan filtrlash mumkin. type berilmasa faqat zonalar qaytadi."),
+    retrieve=extend_schema(tags=['Locations'], summary="Lokatsiya ma'lumoti",
+                           description="Bitta zona yoki stolni qaytaradi."),
+    create=extend_schema(tags=['Locations'], summary="Lokatsiya qo'shish",
+                         description="Yangi zona (type=zone) yoki stol (type=table, parent=zona) yaratadi. Faqat menejer yoki admin."),
+    update=extend_schema(tags=['Locations'], summary="Lokatsiyani yangilash",
+                         description="Zona yoki stol ma'lumotlarini to'liq yangilaydi. Faqat menejer yoki admin."),
+    partial_update=extend_schema(tags=['Locations'], summary="Lokatsiyani qisman yangilash",
+                                 description="Ayrim maydonlarni yangilaydi. Faqat menejer yoki admin."),
+    destroy=extend_schema(tags=['Locations'], summary="Lokatsiyani o'chirish",
+                          description="Zona yoki stolni o'chiradi. Farzandlari bor zonani o'chirib bo'lmaydi."),
 )
 class LocationViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = LocationListSerializer

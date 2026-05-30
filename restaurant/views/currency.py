@@ -9,9 +9,12 @@ from helpers.permissions import IsManagerOrAdmin
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Currencies']),
-    retrieve=extend_schema(tags=['Currencies']),
-    create=extend_schema(tags=['Currencies']),
+    list=extend_schema(tags=['Currencies'], summary="Valyutalar ro'yxati",
+                       description="Mavjud valyutalar ro'yxati (nomi va kodi)."),
+    retrieve=extend_schema(tags=['Currencies'], summary="Valyuta ma'lumoti",
+                           description="Bitta valyutani qaytaradi."),
+    create=extend_schema(tags=['Currencies'], summary="Valyuta qo'shish",
+                         description="Yangi valyuta yaratadi. Faqat menejer yoki admin."),
 )
 class CurrencyViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = CurrencySerializer

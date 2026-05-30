@@ -15,12 +15,18 @@ from helpers.permissions import IsManagerOrAdmin
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Menu']),
-    retrieve=extend_schema(tags=['Menu']),
-    create=extend_schema(tags=['Menu']),
-    update=extend_schema(tags=['Menu']),
-    partial_update=extend_schema(tags=['Menu']),
-    destroy=extend_schema(tags=['Menu']),
+    list=extend_schema(tags=['Menu'], summary="Kategoriyalar ro'yxati",
+                       description="Menu kategoriyalari ro'yxati (nomi va icon)."),
+    retrieve=extend_schema(tags=['Menu'], summary="Kategoriya ma'lumoti",
+                           description="Bitta menu kategoriyasini qaytaradi."),
+    create=extend_schema(tags=['Menu'], summary="Kategoriya qo'shish",
+                         description="Yangi menu kategoriyasi yaratadi (nomi + icon). Faqat menejer yoki admin."),
+    update=extend_schema(tags=['Menu'], summary="Kategoriyani yangilash",
+                         description="Kategoriya nomi va iconini to'liq yangilaydi. Faqat menejer yoki admin."),
+    partial_update=extend_schema(tags=['Menu'], summary="Kategoriyani qisman yangilash",
+                                 description="Kategoriyaning ayrim maydonlarini yangilaydi. Faqat menejer yoki admin."),
+    destroy=extend_schema(tags=['Menu'], summary="Kategoriyani o'chirish",
+                          description="Menu kategoriyasini o'chiradi. Faqat menejer yoki admin."),
 )
 class MenuCategoryViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = MenuCategoryListSerializer
@@ -50,12 +56,18 @@ class MenuCategoryViewSet(BaseViewSetMixin, ModelViewSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Menu']),
-    retrieve=extend_schema(tags=['Menu']),
-    create=extend_schema(tags=['Menu']),
-    update=extend_schema(tags=['Menu']),
-    partial_update=extend_schema(tags=['Menu']),
-    destroy=extend_schema(tags=['Menu']),
+    list=extend_schema(tags=['Menu'], summary="Taomlar ro'yxati",
+                       description="Menu taomlari ro'yxati (nomi, narx, kategoriya). Nomi bo'yicha qidirish mumkin."),
+    retrieve=extend_schema(tags=['Menu'], summary="Taom ma'lumoti",
+                           description="Bitta taomning to'liq ma'lumotini qaytaradi."),
+    create=extend_schema(tags=['Menu'], summary="Taom qo'shish",
+                         description="Yangi taom yaratadi (nomi, narx, kategoriya). Faqat menejer yoki admin."),
+    update=extend_schema(tags=['Menu'], summary="Taomni yangilash",
+                         description="Taom ma'lumotlarini to'liq yangilaydi. Faqat menejer yoki admin."),
+    partial_update=extend_schema(tags=['Menu'], summary="Taomni qisman yangilash",
+                                 description="Taomning ayrim maydonlarini yangilaydi. Faqat menejer yoki admin."),
+    destroy=extend_schema(tags=['Menu'], summary="Taomni o'chirish",
+                          description="Taomni soft-delete qiladi. Faqat menejer yoki admin."),
 )
 class MenuItemViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = MenuItemListSerializer

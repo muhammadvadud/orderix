@@ -17,13 +17,20 @@ from helpers.permissions import IsManagerOrAdmin, IsAdmin
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Restaurants']),
-    retrieve=extend_schema(tags=['Restaurants']),
-    create=extend_schema(tags=['Restaurants']),
-    update=extend_schema(tags=['Restaurants']),
-    partial_update=extend_schema(tags=['Restaurants']),
-    destroy=extend_schema(tags=['Restaurants']),
-    restaurant_settings=extend_schema(tags=['Restaurants']),
+    list=extend_schema(tags=['Restaurants'], summary="Restoranlar ro'yxati",
+                       description="Restoranlar ro'yxatini qaytaradi."),
+    retrieve=extend_schema(tags=['Restaurants'], summary="Restoran ma'lumoti",
+                           description="Bitta restoranni sozlamalari bilan qaytaradi."),
+    create=extend_schema(tags=['Restaurants'], summary="Restoran qo'shish",
+                         description="Yangi restoran yaratadi. Faqat admin."),
+    update=extend_schema(tags=['Restaurants'], summary="Restoranni yangilash",
+                         description="Restoran ma'lumotlarini to'liq yangilaydi."),
+    partial_update=extend_schema(tags=['Restaurants'], summary="Restoranni qisman yangilash",
+                                 description="Restoranning ayrim maydonlarini yangilaydi."),
+    destroy=extend_schema(tags=['Restaurants'], summary="Restoranni o'chirish",
+                          description="Restoranni soft-delete qiladi. Faqat admin."),
+    restaurant_settings=extend_schema(tags=['Restaurants'], summary="Restoran sozlamalari",
+                                      description="Restoran sozlamalarini (valyuta, xizmat haqi, bildirishnomalar) ko'rish yoki yangilash."),
 )
 class RestaurantViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = RestaurantListSerializer

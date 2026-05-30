@@ -18,14 +18,22 @@ from helpers.permissions import IsManagerOrAdmin
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Orders']),
-    retrieve=extend_schema(tags=['Orders']),
-    create=extend_schema(tags=['Orders']),
-    partial_update=extend_schema(tags=['Orders']),
-    destroy=extend_schema(tags=['Orders']),
-    update_status=extend_schema(tags=['Orders']),
-    add_item=extend_schema(tags=['Orders']),
-    remove_item=extend_schema(tags=['Orders']),
+    list=extend_schema(tags=['Orders'], summary="Buyurtmalar ro'yxati",
+                       description="Buyurtmalar ro'yxati. `status`, `date_from`, `date_to` query paramlari bilan filtrlash mumkin. Ofitsiant faqat o'z buyurtmalarini ko'radi."),
+    retrieve=extend_schema(tags=['Orders'], summary="Buyurtma tafsiloti",
+                           description="Bitta buyurtmani taomlari (items) bilan birga qaytaradi."),
+    create=extend_schema(tags=['Orders'], summary="Buyurtma yaratish",
+                         description="Yangi buyurtma yaratadi (location_id + items). Xizmat haqi (service_fee) avtomatik qo'shiladi. Bitta lokatsiyada faqat bitta aktiv buyurtma bo'lishi mumkin."),
+    partial_update=extend_schema(tags=['Orders'], summary="Buyurtmani qisman yangilash",
+                                 description="Buyurtmaning ayrim maydonlarini yangilaydi."),
+    destroy=extend_schema(tags=['Orders'], summary="Buyurtmani o'chirish",
+                          description="Buyurtmani o'chiradi. Faqat menejer yoki admin."),
+    update_status=extend_schema(tags=['Orders'], summary="Buyurtma statusini o'zgartirish",
+                                description="Buyurtma statusini o'zgartiradi (preparing → delivered → closed/cancelled). Status oqimi tekshiriladi."),
+    add_item=extend_schema(tags=['Orders'], summary="Buyurtmaga taom qo'shish",
+                           description="Aktiv buyurtmaga taom qo'shadi va umumiy summani qayta hisoblaydi."),
+    remove_item=extend_schema(tags=['Orders'], summary="Buyurtmadan taom o'chirish",
+                              description="Aktiv buyurtmadan taomni o'chiradi va umumiy summani qayta hisoblaydi."),
 )
 class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     serializer_class = OrderListSerializer
