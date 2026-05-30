@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from accounts.views.auth import LoginView, TokenRefreshView, TokenVerifyView, GetMeView
+from accounts.views.otp import OtpRequestView, OtpVerifyView
 from accounts.views.user import UserViewSet
 
 router = DefaultRouter(trailing_slash=False)
@@ -13,4 +14,6 @@ urlpatterns = [
     path('auth/refresh', TokenRefreshView.as_view(), name='auth-refresh'),
     path('auth/verify', TokenVerifyView.as_view(), name='auth-verify'),
     path('auth/me', GetMeView.as_view(), name='auth-me'),
+    path('auth/otp/request', OtpRequestView.as_view(), name='auth-otp-request'),
+    path('auth/otp/verify', OtpVerifyView.as_view(), name='auth-otp-verify'),
 ]
