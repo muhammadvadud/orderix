@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'order',
     'restaurant',
     'storage',
+    'stats',
 
     # Install apps
     'rest_framework',
@@ -178,6 +179,8 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Locations', 'description': 'Joylashuvlar'},
         {'name': 'Menu', 'description': 'Menu kategoriyalari va mahsulotlar'},
         {'name': 'Orders', 'description': 'Buyurtmalar'},
+        {'name': 'Stats', 'description': 'Statistika va hisobotlar'},
+        {'name': 'Settings', 'description': 'Restoran sozlamalari'},
     ],
 }
 APPEND_SLASH = False
