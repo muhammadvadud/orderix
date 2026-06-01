@@ -91,15 +91,28 @@ class TopItemsView(APIView):
     def get(self, request):
         restaurant = request.user.restaurant
         limit = int(request.query_params.get('limit', 10))
-        date_param = request.query_params.get('date', 'today')
 
         qs = OrderItems.objects.filter(order__restaurant=restaurant).exclude(
             order__status=OrderStatusChoices.CANCELLED)
 
-        if date_param == 'today':
-            qs = qs.filter(order__created__date=timezone.localdate())
-        elif date_param:
-            qs = qs.filter(order__created__date=date_param)
+        # Davr: date_from/date_to oraliq, range preseti yoki bitta sana (standart: today)
+        date_from = parse_date(request.query_params.get('date_from') or '')
+        date_to = parse_date(request.query_params.get('date_to') or '')
+        range_param = request.query_params.get('range')
+
+        if date_from and date_to and date_from <= date_to:
+            qs = qs.filter(order__created__date__gte=date_from,
+                           order__created__date__lte=date_to)
+        elif range_param in ('7d', '30d', '90d'):
+            days = {'7d': 7, '30d': 30, '90d': 90}[range_param]
+            start = timezone.localdate() - timedelta(days=days - 1)
+            qs = qs.filter(order__created__date__gte=start)
+        else:
+            date_param = request.query_params.get('date', 'today')
+            if date_param == 'today':
+                qs = qs.filter(order__created__date=timezone.localdate())
+            elif date_param:
+                qs = qs.filter(order__created__date=date_param)
 
         rows = qs.values('menu_item').annotate(
             name=F('menu_item__name'),
