@@ -26,6 +26,8 @@ class Order(models.Model):
         default=OrderStatusChoices.PREPARING
     )
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    # Buyurtma yaratilgan paytdagi restoran xizmat haqi (%) — keyin sozlama o'zgarsa ham shu saqlanadi
+    service_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created = models.DateTimeField(auto_now_add=True)
     closed = models.DateTimeField(null=True, blank=True)
 

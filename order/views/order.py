@@ -225,8 +225,8 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         return Response(OrderDetailSerializer(order).data)
 
     def _recalculate_total(self, order):
-        settings = RestaurantSettings.objects.filter(restaurant=order.restaurant).first()
-        service_fee_pct = settings.service_fee if settings else 0
+        # Buyurtmada saqlangan xizmat haqidan foydalanamiz (sozlama keyin o'zgarsa ham summa o'zgarmaydi)
+        service_fee_pct = order.service_fee or 0
 
         subtotal = sum(item.price * item.quantity for item in order.items.all())
         order.total_amount = subtotal + (subtotal * service_fee_pct / 100)

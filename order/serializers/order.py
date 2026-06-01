@@ -54,8 +54,8 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'waiter', 'waiter_name', 'location', 'location_name',
-                  'status', 'total_amount', 'items_count', 'items_lines', 'created', 'closed')
-        read_only_fields = ('waiter', 'total_amount', 'closed')
+                  'status', 'total_amount', 'service_fee', 'items_count', 'items_lines', 'created', 'closed')
+        read_only_fields = ('waiter', 'total_amount', 'service_fee', 'closed')
 
 
 class OrderDetailSerializer(serializers.ModelSerializer):
@@ -69,8 +69,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'waiter', 'waiter_name', 'location', 'location_name',
-                  'status', 'total_amount', 'items', 'created', 'closed')
-        read_only_fields = ('waiter', 'total_amount', 'closed')
+                  'status', 'total_amount', 'service_fee', 'items', 'created', 'closed')
+        read_only_fields = ('waiter', 'total_amount', 'service_fee', 'closed')
 
 
 class OrderCreateSerializer(serializers.Serializer):
@@ -123,6 +123,7 @@ class OrderCreateSerializer(serializers.Serializer):
                 restaurant=user.restaurant,
                 location_id=validated_data['location_id'],
                 total_amount=total_amount,
+                service_fee=service_fee_pct,
             )
 
             for item in order_items:
