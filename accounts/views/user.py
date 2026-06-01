@@ -64,8 +64,12 @@ class UserViewSet(BaseViewSetMixin, ModelViewSet):
         instance.save()
 
     @extend_schema(tags=['Users'], summary="Xodim lavozimlari ro'yxati",
-                   description="Tizimda mavjud bo'lgan xodim lavozimlarini (rollarni) qaytaradi.")
+                   description="Tizimda mavjud bo'lgan xodim lavozimlarini (rollarni) qaytaradi. "
+                               "Admin rolini faqat adminning o'zi ko'radi.")
     @action(detail=False, methods=['get'], url_path='roles')
     def roles(self, request):
-        data = [{'value': value, 'label': label} for value, label in UserRoleChoices.choices]
+        choices = UserRoleChoices.choices
+        if request.user.role != UserRoleChoices.ADMIN:
+            choices = [(v, l) for v, l in choices if v != UserRoleChoices.ADMIN]
+        data = [{'value': value, 'label': label} for value, label in choices]
         return Response(data)

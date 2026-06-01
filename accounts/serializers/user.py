@@ -1,5 +1,16 @@
 from rest_framework import serializers
-from accounts.models import Account
+from accounts.models import Account, UserRoleChoices
+
+
+class RoleAssignmentMixin:
+    """Faqat admin 'admin' rolini biriktira oladi; manager qila olmaydi."""
+
+    def validate_role(self, value):
+        request = self.context.get('request')
+        actor = getattr(request, 'user', None)
+        if value == UserRoleChoices.ADMIN and getattr(actor, 'role', None) != UserRoleChoices.ADMIN:
+            raise serializers.ValidationError("Sizda admin rolini biriktirish huquqi yo'q.")
+        return value
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -20,7 +31,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
                   'role', 'restaurant', 'tg_id', 'created_at')
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(RoleAssignmentMixin, serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -36,7 +47,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class UserUpdateSerializer(RoleAssignmentMixin, serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = ('username', 'full_name', 'color', 'phone_number', 'role', 'tg_id')
