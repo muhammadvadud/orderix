@@ -13,6 +13,7 @@ from accounts.models import UserRoleChoices
 from helpers.permissions import IsManagerOrAdmin
 from stats.serializers.stats import (
     DashboardSerializer, TopItemSerializer, SeriesPointSerializer, WaiterStatsSerializer,
+    ItemSeriesPointSerializer,
 )
 
 ACTIVE_STATUSES = [OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED]
@@ -182,6 +183,67 @@ class SeriesView(APIView):
                 'date': d,
                 'revenue': row['revenue'] if row else 0,
                 'orders': row['orders'] if row else 0,
+            })
+        return Response({'status': True, 'message': 'OK', 'data': data})
+
+
+@extend_schema(tags=['Stats'], summary="Bitta taomning kunlik sotuvi",
+               description="Tanlangan taomning kunma-kun sotilgan soni va tushumi. "
+                           "range: 7d|30d|90d yoki date_from/date_to (YYYY-MM-DD).",
+               parameters=[
+                   OpenApiParameter('menu_item', int, description="Taom (menu item) IDsi", required=True),
+                   OpenApiParameter('range', str, description="7d | 30d | 90d (standart: 30d)"),
+                   OpenApiParameter('date_from', str, description="Boshlanish sanasi YYYY-MM-DD"),
+                   OpenApiParameter('date_to', str, description="Tugash sanasi YYYY-MM-DD"),
+               ],
+               responses=ItemSeriesPointSerializer(many=True))
+class ItemSeriesView(APIView):
+    permission_classes = [IsAuthenticated, IsManagerOrAdmin]
+
+    def get(self, request):
+        restaurant = request.user.restaurant
+
+        try:
+            menu_item_id = int(request.query_params.get('menu_item'))
+        except (TypeError, ValueError):
+            return Response({'status': True, 'message': 'OK', 'data': []})
+
+        date_from = parse_date(request.query_params.get('date_from') or '')
+        date_to = parse_date(request.query_params.get('date_to') or '')
+        if date_from and date_to and date_from <= date_to:
+            start, end = date_from, date_to
+        else:
+            range_param = request.query_params.get('range', '30d')
+            days = {'7d': 7, '30d': 30, '90d': 90}.get(range_param, 30)
+            end = timezone.localdate()
+            start = end - timedelta(days=days - 1)
+
+        total_days = (end - start).days + 1
+        if total_days > 366:
+            start = end - timedelta(days=365)
+            total_days = 366
+
+        qs = OrderItems.objects.filter(
+            order__restaurant=restaurant,
+            menu_item_id=menu_item_id,
+            order__created__date__gte=start,
+            order__created__date__lte=end,
+        ).exclude(order__status=OrderStatusChoices.CANCELLED)
+
+        rows = qs.annotate(day=TruncDate('order__created')).values('day').annotate(
+            qty=Sum('quantity'),
+            revenue=Sum('subtotal'),
+        ).order_by('day')
+
+        by_date = {r['day']: r for r in rows}
+        data = []
+        for i in range(total_days):
+            d = start + timedelta(days=i)
+            row = by_date.get(d)
+            data.append({
+                'date': d,
+                'qty': row['qty'] if row else 0,
+                'revenue': row['revenue'] if row else 0,
             })
         return Response({'status': True, 'message': 'OK', 'data': data})
 

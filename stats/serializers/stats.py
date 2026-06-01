@@ -38,6 +38,12 @@ class SeriesPointSerializer(serializers.Serializer):
     orders = serializers.IntegerField()
 
 
+class ItemSeriesPointSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    qty = serializers.IntegerField()
+    revenue = serializers.DecimalField(max_digits=15, decimal_places=2)
+
+
 class WaiterStatsSerializer(serializers.Serializer):
     orders_today = serializers.IntegerField()
     revenue_today = serializers.DecimalField(max_digits=15, decimal_places=2)
