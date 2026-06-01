@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from datetime import timedelta
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
@@ -116,21 +117,41 @@ class TopItemsView(APIView):
 
 
 @extend_schema(tags=['Stats'], summary="Tushum/buyurtma grafigi",
-               description="Kunlik tushum va buyurtmalar grafigi uchun ma'lumot. range: 7d | 30d | 90d.",
-               parameters=[OpenApiParameter('range', str, description="7d | 30d | 90d (standart: 30d)")],
+               description="Kunlik tushum va buyurtmalar grafigi. range: 7d | 30d | 90d, "
+                           "yoki date_from/date_to (YYYY-MM-DD) bilan ixtiyoriy oraliq.",
+               parameters=[
+                   OpenApiParameter('range', str, description="7d | 30d | 90d (standart: 30d)"),
+                   OpenApiParameter('date_from', str, description="Boshlanish sanasi YYYY-MM-DD"),
+                   OpenApiParameter('date_to', str, description="Tugash sanasi YYYY-MM-DD"),
+               ],
                responses=SeriesPointSerializer(many=True))
 class SeriesView(APIView):
     permission_classes = [IsAuthenticated, IsManagerOrAdmin]
 
     def get(self, request):
         restaurant = request.user.restaurant
-        range_param = request.query_params.get('range', '30d')
-        days = {'7d': 7, '30d': 30, '90d': 90}.get(range_param, 30)
 
-        start = timezone.localdate() - timedelta(days=days - 1)
+        # date_from/date_to berilgan bo'lsa ixtiyoriy oraliq, aks holda range presetlari
+        date_from = parse_date(request.query_params.get('date_from') or '')
+        date_to = parse_date(request.query_params.get('date_to') or '')
+        if date_from and date_to and date_from <= date_to:
+            start, end = date_from, date_to
+        else:
+            range_param = request.query_params.get('range', '30d')
+            days = {'7d': 7, '30d': 30, '90d': 90}.get(range_param, 30)
+            end = timezone.localdate()
+            start = end - timedelta(days=days - 1)
+
+        total_days = (end - start).days + 1
+        # juda katta oraliqni cheklaymiz (1 yil)
+        if total_days > 366:
+            start = end - timedelta(days=365)
+            total_days = 366
+
         qs = Order.objects.filter(
             restaurant=restaurant,
             created__date__gte=start,
+            created__date__lte=end,
         ).exclude(status=OrderStatusChoices.CANCELLED)
 
         rows = qs.annotate(day=TruncDate('created')).values('day').annotate(
@@ -140,7 +161,7 @@ class SeriesView(APIView):
 
         by_date = {r['day']: r for r in rows}
         data = []
-        for i in range(days):
+        for i in range(total_days):
             d = start + timedelta(days=i)
             row = by_date.get(d)
             data.append({
