@@ -151,7 +151,13 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     def validate(self, attrs):
         new_status = attrs['status']
         current_status = self.instance.status
-        if new_status not in self.VALID_TRANSITIONS.get(current_status, []):
+        allowed = list(self.VALID_TRANSITIONS.get(current_status, []))
+        # Menejer yopilgan/bekor qilingan buyurtmani qayta ocha oladi (ofitsiant emas)
+        if self.context.get('allow_reopen') and current_status in (
+                OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED):
+            allowed = [OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED,
+                       OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED]
+        if new_status not in allowed:
             raise serializers.ValidationError(
                 f"'{current_status}' dan '{new_status}' ga o'tish mumkin emas"
             )

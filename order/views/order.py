@@ -93,17 +93,24 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     def update_status(self, request, pk=None):
         order = self.get_object()
 
-        # Yopilgan yoki bekor qilingan buyurtma statusini o'zgartirib bo'lmaydi
-        if order.status in (OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED):
-            raise ValidationError("Yopilgan buyurtma statusini o'zgartirib bo'lmaydi")
+        # Yopilgan/bekor qilingan buyurtmani faqat menejer (admin) o'zgartira oladi, ofitsiant emas
+        is_manager = request.user.role != 'waiter'
+        if order.status in (OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED) \
+                and not is_manager:
+            raise ValidationError("Yopilgan buyurtma statusini faqat menejer o'zgartira oladi")
 
-        serializer = OrderStatusUpdateSerializer(order, data=request.data)
+        serializer = OrderStatusUpdateSerializer(
+            order, data=request.data, context={'allow_reopen': is_manager}
+        )
         serializer.is_valid(raise_exception=True)
 
         new_status = serializer.validated_data['status']
         order.status = new_status
         if new_status in (OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED):
             order.closed = timezone.now()
+        else:
+            # qayta ochilsa yopilish vaqtini tozalaymiz
+            order.closed = None
         order.save()
 
         # Buyurtma yetkazildi bo'lsa, bekor qilinmagan barcha taomlar ham yetkazildi bo'ladi
