@@ -12,7 +12,7 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from restaurant.models import MenuItems, RestaurantSettings
 
-from order.models import Order, OrderItems, OrderStatusChoices
+from order.models import Order, OrderItems, OrderStatusChoices, OrderItemStatusChoices
 from order.serializers.order import (
     OrderListSerializer, OrderDetailSerializer,
     OrderCreateSerializer, OrderStatusUpdateSerializer,
@@ -137,6 +137,8 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
             subtotal=menu_item.price * quantity,
         )
         self._recalculate_total(order)
+        # Yangi taom qo'shilganda buyurtma yana "tayyorlanmoqda" bo'ladi
+        self._sync_order_status(order)
         return Response(OrderDetailSerializer(order).data)
 
     def _replace_items(self, order, request):
@@ -157,6 +159,7 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
                     subtotal=menu_item.price * quantity,
                 )
             self._recalculate_total(order)
+            self._sync_order_status(order)
         return Response(OrderDetailSerializer(order).data)
 
     @extend_schema(methods=['PATCH'], tags=['Orders'], summary="Taom miqdorini o'zgartirish",
@@ -177,6 +180,8 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         if request.method == 'DELETE':
             item.delete()
             self._recalculate_total(order)
+            # Taom o'chgach qolganlari yetkazilgan bo'lsa, buyurtma yetkazildi bo'ladi
+            self._sync_order_status(order)
             return Response(OrderDetailSerializer(order).data)
 
         serializer = OrderItemQuantityUpdateSerializer(data=request.data)
@@ -202,6 +207,8 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         serializer.is_valid(raise_exception=True)
         item.status = serializer.validated_data['status']
         item.save(update_fields=['status'])
+        # Hamma taom yetkazilgan bo'lsa buyurtma ham yetkazildi bo'ladi
+        self._sync_order_status(order)
         return Response(OrderDetailSerializer(order).data)
 
     def _recalculate_total(self, order):
@@ -211,3 +218,21 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         subtotal = sum(item.price * item.quantity for item in order.items.all())
         order.total_amount = subtotal + (subtotal * service_fee_pct / 100)
         order.save(update_fields=['total_amount'])
+
+    def _sync_order_status(self, order):
+        """Buyurtma statusini taomlar holatiga qarab avtomatik moslaydi.
+        Hamma (bekor qilinmagan) taomlar yetkazilgan bo'lsa -> delivered,
+        aks holda -> preparing. Yopilgan/bekor qilingan buyurtma o'zgarmaydi."""
+        if order.status in (OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED):
+            return
+
+        active = [it for it in order.items.all()
+                  if it.status != OrderItemStatusChoices.CANCELLED]
+        if active and all(it.status == OrderItemStatusChoices.DELIVERED for it in active):
+            new_status = OrderStatusChoices.DELIVERED
+        else:
+            new_status = OrderStatusChoices.PREPARING
+
+        if order.status != new_status:
+            order.status = new_status
+            order.save(update_fields=['status'])
