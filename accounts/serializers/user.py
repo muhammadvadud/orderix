@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 from accounts.models import Account, UserRoleChoices
 
@@ -5,6 +7,15 @@ from accounts.models import Account, UserRoleChoices
 class RoleAssignmentMixin:
     """Faqat admin 'admin' rolini biriktira oladi; manager qila olmaydi.
     Manager faqat o'zining restoraniga xodim qo'sha oladi."""
+
+    def validate_phone_number(self, value):
+        # '+' va bo'shliqlarni tashlab, faqat O'zbekiston formatini qabul qilamiz: 998 + 9 raqam
+        cleaned = re.sub(r'[\s+]', '', value or '')
+        if not re.fullmatch(r'998\d{9}', cleaned):
+            raise serializers.ValidationError(
+                "Telefon raqami noto'g'ri. Format: 998 va 9 ta raqam (masalan 998901234567)."
+            )
+        return cleaned
 
     def validate_role(self, value):
         request = self.context.get('request')
