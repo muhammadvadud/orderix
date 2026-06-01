@@ -44,6 +44,9 @@ class OrderItemsBulkSerializer(serializers.Serializer):
 class OrderListSerializer(serializers.ModelSerializer):
     waiter_name = serializers.SerializerMethodField()
     location_name = serializers.CharField(source='location.name', read_only=True)
+    # get_queryset'da annotate qilingan: taomlar umumiy soni va qatorlar soni
+    items_count = serializers.IntegerField(read_only=True)
+    items_lines = serializers.IntegerField(read_only=True)
 
     def get_waiter_name(self, obj) -> str:
         return obj.waiter.full_name or obj.waiter.username
@@ -51,7 +54,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'waiter', 'waiter_name', 'location', 'location_name',
-                  'status', 'total_amount', 'created', 'closed')
+                  'status', 'total_amount', 'items_count', 'items_lines', 'created', 'closed')
         read_only_fields = ('waiter', 'total_amount', 'closed')
 
 

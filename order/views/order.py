@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, NotFound, MethodNotAllowed
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db import transaction
+from django.db.models import Sum, Count
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
@@ -56,7 +58,10 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Order.objects.filter(restaurant=user.restaurant).select_related('waiter', 'location')
+        qs = Order.objects.filter(restaurant=user.restaurant).select_related('waiter', 'location').annotate(
+            items_count=Coalesce(Sum('items__quantity'), 0),
+            items_lines=Count('items', distinct=True),
+        )
         if user.role == 'waiter':
             qs = qs.filter(waiter=user)
 
