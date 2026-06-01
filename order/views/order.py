@@ -146,6 +146,12 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         serializer.is_valid(raise_exception=True)
         items_data = serializer.validated_data['items']
 
+        # Avval qo'shilgan taomlarning statusini saqlab qolamiz, shunda
+        # masalan yetkazilgan oshning statusi shashlik qo'shilganda o'zgarmaydi.
+        existing_status = {
+            item.menu_item_id: item.status for item in order.items.all()
+        }
+
         with transaction.atomic():
             order.items.all().delete()
             for item_data in items_data:
@@ -157,6 +163,7 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
                     quantity=quantity,
                     price=menu_item.price,
                     subtotal=menu_item.price * quantity,
+                    status=existing_status.get(menu_item.id, OrderItemStatusChoices.PREPARING),
                 )
             self._recalculate_total(order)
             self._sync_order_status(order)
