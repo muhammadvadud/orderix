@@ -1,10 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
-from accounts.models import Account
+from accounts.models import Account, UserRoleChoices
 from accounts.serializers.user import (
     UserListSerializer, UserDetailSerializer,
     UserCreateSerializer, UserUpdateSerializer,
@@ -60,3 +62,10 @@ class UserViewSet(BaseViewSetMixin, ModelViewSet):
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
         instance.save()
+
+    @extend_schema(tags=['Users'], summary="Xodim lavozimlari ro'yxati",
+                   description="Tizimda mavjud bo'lgan xodim lavozimlarini (rollarni) qaytaradi.")
+    @action(detail=False, methods=['get'], url_path='roles')
+    def roles(self, request):
+        data = [{'value': value, 'label': label} for value, label in UserRoleChoices.choices]
+        return Response(data)
