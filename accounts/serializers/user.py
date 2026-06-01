@@ -3,13 +3,25 @@ from accounts.models import Account, UserRoleChoices
 
 
 class RoleAssignmentMixin:
-    """Faqat admin 'admin' rolini biriktira oladi; manager qila olmaydi."""
+    """Faqat admin 'admin' rolini biriktira oladi; manager qila olmaydi.
+    Manager faqat o'zining restoraniga xodim qo'sha oladi."""
 
     def validate_role(self, value):
         request = self.context.get('request')
         actor = getattr(request, 'user', None)
         if value == UserRoleChoices.ADMIN and getattr(actor, 'role', None) != UserRoleChoices.ADMIN:
             raise serializers.ValidationError("Sizda admin rolini biriktirish huquqi yo'q.")
+        return value
+
+    def validate_restaurant(self, value):
+        request = self.context.get('request')
+        actor = getattr(request, 'user', None)
+        if getattr(actor, 'role', None) == UserRoleChoices.ADMIN:
+            return value
+        if value is not None and value != getattr(actor, 'restaurant', None):
+            raise serializers.ValidationError(
+                "Siz faqat o'z restoraningizga xodim qo'sha olasiz."
+            )
         return value
 
 
