@@ -92,6 +92,11 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='status')
     def update_status(self, request, pk=None):
         order = self.get_object()
+
+        # Yopilgan yoki bekor qilingan buyurtma statusini o'zgartirib bo'lmaydi
+        if order.status in (OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED):
+            raise ValidationError("Yopilgan buyurtma statusini o'zgartirib bo'lmaydi")
+
         serializer = OrderStatusUpdateSerializer(order, data=request.data)
         serializer.is_valid(raise_exception=True)
 
