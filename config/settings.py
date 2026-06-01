@@ -106,7 +106,9 @@ REDIS_URL = env.str('REDIS_URL', default='')
 if REDIS_URL:
     CHANNEL_LAYERS = {
         'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            # PubSub layer broadcast uchun mo'ljallangan va core layer'dagi
+            # blocking-read timeout muammosini keltirib chiqarmaydi.
+            'BACKEND': 'channels_redis.pubsub.RedisPubSubChannelLayer',
             'CONFIG': {'hosts': [REDIS_URL]},
         },
     }
