@@ -223,6 +223,8 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
     @action(detail=True, methods=['patch'], url_path=r'items/(?P<item_id>[^/.]+)/status')
     def update_item_status(self, request, pk=None, item_id=None):
         order = self.get_object()
+        self._assert_editable(order, "Yopilgan buyurtma taomlari statusini o'zgartirib bo'lmaydi")
+
         try:
             item = OrderItems.objects.get(pk=item_id, order=order)
         except OrderItems.DoesNotExist:
