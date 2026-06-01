@@ -39,6 +39,9 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    # daphne ASGI runserver'ni almashtirishi uchun ro'yxat boshida turishi shart
+    'daphne',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,8 +55,10 @@ INSTALLED_APPS = [
     'restaurant',
     'storage',
     'stats',
+    'realtime',
 
     # Install apps
+    'channels',
     'rest_framework',
     'drf_spectacular',
     'rest_framework_simplejwt',
@@ -92,6 +97,25 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# WebSocket uchun channel layer. REDIS_URL berilgan bo'lsa Redis ishlatiladi
+# (sync signal -> async consumer xabar yetkazish ishonchli), aks holda lokal
+# dev uchun InMemory'ga tushadi.
+REDIS_URL = env.str('REDIS_URL', default='')
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [REDIS_URL]},
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
