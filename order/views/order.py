@@ -146,8 +146,8 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         serializer.is_valid(raise_exception=True)
         items_data = serializer.validated_data['items']
 
-        # Avval qo'shilgan taomlarning statusini saqlab qolamiz, shunda
-        # masalan yetkazilgan oshning statusi shashlik qo'shilganda o'zgarmaydi.
+        # Mavjud item'larning statusini menu_item bo'yicha saqlaymiz, chunki
+        # delete + recreate paytida status default qiymatga tushib ketadi.
         existing_status = {
             item.menu_item_id: item.status for item in order.items.all()
         }
