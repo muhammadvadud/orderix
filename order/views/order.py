@@ -101,6 +101,12 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
             order.closed = timezone.now()
         order.save()
 
+        # Buyurtma yetkazildi bo'lsa, bekor qilinmagan barcha taomlar ham yetkazildi bo'ladi
+        if new_status == OrderStatusChoices.DELIVERED:
+            order.items.exclude(status=OrderItemStatusChoices.CANCELLED).update(
+                status=OrderItemStatusChoices.DELIVERED
+            )
+
         return Response(OrderDetailSerializer(order).data)
 
     def _assert_editable(self, order, message):
