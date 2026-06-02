@@ -20,7 +20,7 @@ class Account(AbstractUser):
     full_name = models.CharField(max_length=200, blank=True)
     color = models.CharField(max_length=7, default='#2E75B6')
     restaurant = models.ForeignKey(Restaurants, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
-    tg_id = models.IntegerField(unique=True, null=True, blank=True)
+    tg_id = models.BigIntegerField(unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 

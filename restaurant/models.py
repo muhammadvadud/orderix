@@ -32,7 +32,7 @@ class Currency(models.Model):
 
 class RestaurantSettings(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='currency')
-    restaurant = models.ForeignKey(Restaurants, on_delete=models.CASCADE, related_name='restaurant_settings')
+    restaurant = models.ForeignKey(Restaurants, on_delete=models.CASCADE, related_name='restaurant_settings', unique=True)
     service_fee = models.DecimalField(max_digits=10, decimal_places=2)
     notify_orders = models.BooleanField(default=True)
     notify_staff = models.BooleanField(default=False)

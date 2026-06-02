@@ -49,6 +49,11 @@ class Order(models.Model):
                 name='uniq_active_order_per_location',
             ),
         ]
+        indexes = [
+            # Stats va ro'yxat so'rovlari restoran + sana bo'yicha filtr/saralash qiladi
+            models.Index(fields=['restaurant', '-created']),
+            models.Index(fields=['status']),
+        ]
 
 
 class OrderItems(models.Model):
