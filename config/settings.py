@@ -188,7 +188,29 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'helpers.pagination.StandardPagination',
     'PAGE_SIZE': 20,
     'EXCEPTION_HANDLER': 'helpers.base_mixin.custom_exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'otp_request': env.str('THROTTLE_OTP_REQUEST', default='5/min'),
+        'otp_verify': env.str('THROTTLE_OTP_VERIFY', default='15/min'),
+        'login': env.str('THROTTLE_LOGIN', default='10/min'),
+    },
 }
+
+# Cache — throttling hisoblari uchun. Redis bo'lsa workerlar o'rtasida umumiy,
+# aks holda lokal xotira (dev).
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        },
+    }
+else:
+    CACHES = {
+        'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'},
+    }
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Orderix API',

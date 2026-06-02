@@ -13,6 +13,7 @@ from accounts.serializers.otp import OtpRequestSerializer, OtpVerifySerializer
                request=OtpRequestSerializer, responses=OtpRequestSerializer)
 class OtpRequestView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'otp_request'
 
     def post(self, request):
         serializer = OtpRequestSerializer(data=request.data)
@@ -37,6 +38,7 @@ class OtpRequestView(APIView):
                request=OtpVerifySerializer, responses=OtpVerifySerializer)
 class OtpVerifyView(APIView):
     permission_classes = [AllowAny]
+    throttle_scope = 'otp_verify'
 
     def post(self, request):
         serializer = OtpVerifySerializer(data=request.data)
