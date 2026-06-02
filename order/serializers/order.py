@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.db import transaction
+from django.db import transaction, IntegrityError
 
 from order.models import Order, OrderItems, OrderStatusChoices, OrderItemStatusChoices
 from restaurant.models import MenuItems, Locations, RestaurantSettings
@@ -104,42 +104,46 @@ class OrderCreateSerializer(serializers.Serializer):
         user = self.context['request'].user
         items_data = validated_data['items']
 
-        with transaction.atomic():
-            settings = RestaurantSettings.objects.filter(restaurant=user.restaurant).first()
-            service_fee_pct = settings.service_fee if settings else 0
+        try:
+            with transaction.atomic():
+                settings = RestaurantSettings.objects.filter(restaurant=user.restaurant).first()
+                service_fee_pct = settings.service_fee if settings else 0
 
-            subtotal = 0
-            order_items = []
-            for item_data in items_data:
-                menu_item = MenuItems.objects.get(pk=item_data['menu_item_id'])
-                quantity = item_data['quantity']
-                item_subtotal = menu_item.price * quantity
-                subtotal += item_subtotal
-                order_items.append({
-                    'menu_item': menu_item,
-                    'quantity': quantity,
-                    'price': menu_item.price,
-                    'subtotal': item_subtotal,
-                })
+                subtotal = 0
+                order_items = []
+                for item_data in items_data:
+                    menu_item = MenuItems.objects.get(pk=item_data['menu_item_id'])
+                    quantity = item_data['quantity']
+                    item_subtotal = menu_item.price * quantity
+                    subtotal += item_subtotal
+                    order_items.append({
+                        'menu_item': menu_item,
+                        'quantity': quantity,
+                        'price': menu_item.price,
+                        'subtotal': item_subtotal,
+                    })
 
-            total_amount = subtotal + (subtotal * service_fee_pct / 100)
+                total_amount = subtotal + (subtotal * service_fee_pct / 100)
 
-            order = Order.objects.create(
-                waiter=user,
-                restaurant=user.restaurant,
-                location_id=validated_data['location_id'],
-                total_amount=total_amount,
-                service_fee=service_fee_pct,
-            )
-
-            for item in order_items:
-                OrderItems.objects.create(
-                    order=order,
-                    menu_item=item['menu_item'],
-                    quantity=item['quantity'],
-                    price=item['price'],
-                    subtotal=item['subtotal'],
+                order = Order.objects.create(
+                    waiter=user,
+                    restaurant=user.restaurant,
+                    location_id=validated_data['location_id'],
+                    total_amount=total_amount,
+                    service_fee=service_fee_pct,
                 )
+
+                for item in order_items:
+                    OrderItems.objects.create(
+                        order=order,
+                        menu_item=item['menu_item'],
+                        quantity=item['quantity'],
+                        price=item['price'],
+                        subtotal=item['subtotal'],
+                    )
+        except IntegrityError:
+            # Bir vaqtda kelgan ikkinchi so'rov DB unique-constraint'ga uriladi
+            raise serializers.ValidationError("Bu lokatsiyada allaqachon aktiv buyurtma mavjud")
 
         return order
 

@@ -38,6 +38,17 @@ class Order(models.Model):
         db_table = 'orders'
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'
+        constraints = [
+            # Bitta lokatsiyada bir vaqtda faqat bitta aktiv buyurtma bo'lishi mumkin.
+            # DB darajasidagi kafolat — bir vaqtda kelgan so'rovlardagi race'ni yopadi.
+            models.UniqueConstraint(
+                fields=['location'],
+                condition=models.Q(status__in=[
+                    OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED,
+                ]),
+                name='uniq_active_order_per_location',
+            ),
+        ]
 
 
 class OrderItems(models.Model):
