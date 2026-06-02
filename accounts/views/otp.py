@@ -18,12 +18,12 @@ class OtpRequestView(APIView):
     def post(self, request):
         serializer = OtpRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        otp = serializer.save()
+        result = serializer.save()
 
-        data = {'phone_number': otp.phone_number, 'expires_at': otp.expires_at}
+        data = {'phone_number': result['phone_number'], 'expires_at': result['expires_at']}
         # Demo: bot integratsiyasi tayyor bo'lmaguncha kodni qaytaramiz
-        if settings.DEBUG:
-            data['code'] = otp.code
+        if settings.DEBUG and result.get('code'):
+            data['code'] = result['code']
 
         return Response({
             'status': True,

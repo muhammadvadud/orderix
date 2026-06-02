@@ -42,9 +42,10 @@ class Account(AbstractUser):
 
 
 class OtpCode(models.Model):
-    phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=15, db_index=True)
     code = models.CharField(max_length=6)
     is_used = models.BooleanField(default=False)
+    attempts = models.PositiveSmallIntegerField(default=0)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
