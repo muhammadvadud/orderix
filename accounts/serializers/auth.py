@@ -9,7 +9,8 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         user = authenticate(username=attrs['phone_number'], password=attrs['password'])
-        if not user:
+        # O'chirilgan (soft-deleted) akkount ham kira olmasligi kerak.
+        if not user or user.deleted_at is not None:
             raise serializers.ValidationError("Telefon raqam yoki parol noto'g'ri")
         if not user.is_active:
             raise serializers.ValidationError("Foydalanuvchi bloklangan")
