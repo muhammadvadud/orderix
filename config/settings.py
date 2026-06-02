@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     # daphne ASGI runserver'ni almashtirishi uchun ro'yxat boshida turishi shart
     'daphne',
 
+    # jazzmin admin uchun 'django.contrib.admin' dan oldin turishi shart
+    'jazzmin',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -278,5 +281,90 @@ LOGGING = {
     'root': {'handlers': ['console'], 'level': env.str('LOG_LEVEL', default='INFO')},
     'loggers': {
         'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+    },
+}
+
+# Jazzmin — admin panel ko'rinishi (OrderiX navy brendi)
+JAZZMIN_SETTINGS = {
+    'site_title': 'OrderiX Admin',
+    'site_header': 'OrderiX',
+    'site_brand': 'OrderiX',
+    'welcome_sign': 'OrderiX boshqaruv paneliga xush kelibsiz',
+    'copyright': 'OrderiX',
+    'search_model': ['accounts.Account', 'order.Order'],
+
+    # Yuqori menyu
+    'topmenu_links': [
+        {'name': 'Bosh sahifa', 'url': 'admin:index'},
+        {'model': 'accounts.Account'},
+        {'name': 'Buyurtmalar', 'url': 'admin:order_order_changelist'},
+    ],
+
+    'show_sidebar': True,
+    'navigation_expanded': True,
+    # Yon menyu tartibi
+    'order_with_respect_to': [
+        'accounts', 'restaurant', 'order', 'stats', 'auth',
+    ],
+
+    # Model ikonkalari (Font Awesome 5 free)
+    'icons': {
+        'auth': 'fas fa-users-cog',
+        'auth.Group': 'fas fa-user-shield',
+        'accounts': 'fas fa-id-badge',
+        'accounts.Account': 'fas fa-user',
+        'accounts.OtpCode': 'fas fa-key',
+        'order': 'fas fa-receipt',
+        'order.Order': 'fas fa-receipt',
+        'order.OrderItems': 'fas fa-utensils',
+        'restaurant': 'fas fa-store',
+        'restaurant.Restaurants': 'fas fa-store',
+        'restaurant.Locations': 'fas fa-chair',
+        'restaurant.MenuCategory': 'fas fa-list',
+        'restaurant.MenuItems': 'fas fa-hamburger',
+        'restaurant.RestaurantSettings': 'fas fa-cog',
+        'restaurant.Currency': 'fas fa-coins',
+    },
+    'default_icon_parents': 'fas fa-chevron-circle-right',
+    'default_icon_children': 'fas fa-circle',
+
+    # Forma ko'rinishi va modal
+    'related_modal_active': True,
+    'changeform_format': 'horizontal_tabs',
+    'changeform_format_overrides': {
+        'auth.user': 'collapsible',
+        'auth.group': 'vertical_tabs',
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    'navbar_small_text': False,
+    'footer_small_text': False,
+    'body_small_text': False,
+    'brand_small_text': False,
+    'brand_colour': 'navbar-navy',
+    'accent': 'accent-primary',
+    'navbar': 'navbar-navy navbar-dark',
+    'no_navbar_border': True,
+    'navbar_fixed': True,
+    'layout_boxed': False,
+    'footer_fixed': False,
+    'sidebar_fixed': True,
+    'sidebar': 'sidebar-dark-primary',
+    'sidebar_nav_small_text': False,
+    'sidebar_disable_expand': False,
+    'sidebar_nav_child_indent': True,
+    'sidebar_nav_compact_style': False,
+    'sidebar_nav_legacy_style': False,
+    'sidebar_nav_flat_style': False,
+    'theme': 'default',
+    'dark_mode_theme': None,
+    'button_classes': {
+        'primary': 'btn-primary',
+        'secondary': 'btn-secondary',
+        'info': 'btn-info',
+        'warning': 'btn-warning',
+        'danger': 'btn-danger',
+        'success': 'btn-success',
     },
 }
