@@ -91,7 +91,11 @@ class TopItemsView(APIView):
 
     def get(self, request):
         restaurant = request.user.restaurant
-        limit = int(request.query_params.get('limit', 10))
+        try:
+            limit = int(request.query_params.get('limit', 10))
+        except (TypeError, ValueError):
+            limit = 10
+        limit = max(1, min(limit, 50))
 
         qs = OrderItems.objects.filter(order__restaurant=restaurant).exclude(
             order__status=OrderStatusChoices.CANCELLED)
