@@ -142,7 +142,7 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         return self._add_item(order, request)
 
     def _add_item(self, order, request):
-        serializer = OrderItemCreateSerializer(data=request.data)
+        serializer = OrderItemCreateSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
         menu_item = MenuItems.objects.get(pk=serializer.validated_data['menu_item_id'])
@@ -160,7 +160,7 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         return Response(OrderDetailSerializer(order).data)
 
     def _replace_items(self, order, request):
-        serializer = OrderItemsBulkSerializer(data=request.data)
+        serializer = OrderItemsBulkSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         items_data = serializer.validated_data['items']
 

@@ -19,7 +19,13 @@ class OrderItemCreateSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1)
 
     def validate_menu_item_id(self, value):
-        if not MenuItems.objects.filter(pk=value, deleted_at__isnull=True).exists():
+        qs = MenuItems.objects.filter(pk=value, deleted_at__isnull=True)
+        # Taom faqat foydalanuvchining restoraniga tegishli bo'lishi shart
+        # (restoranlararo ma'lumotdan foydalanishning oldini olamiz).
+        request = self.context.get('request')
+        if request is not None and getattr(request.user, 'restaurant_id', None):
+            qs = qs.filter(restaurant_id=request.user.restaurant_id)
+        if not qs.exists():
             raise serializers.ValidationError("Taom topilmadi")
         return value
 
