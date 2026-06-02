@@ -8,7 +8,6 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('silk/', include('silk.urls', namespace='silk')),
     path('api/v1/', include('accounts.urls')),
     path('api/v1/', include('restaurant.urls')),
     path('api/v1/', include('order.urls')),
@@ -16,6 +15,8 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    # Silk profiler UI — faqat development'da
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

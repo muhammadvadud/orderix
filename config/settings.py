@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 import environ
-import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -34,7 +33,7 @@ SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'] if DEBUG else [])
 
 # Application definition
 
@@ -62,14 +61,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'rest_framework_simplejwt',
-    'silk',
     'corsheaders',
 
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'silk.middleware.SilkyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,6 +75,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Silk profiler — faqat development'da. Production'da barcha so'rovlarni
+# yozib, ochiq UI'da ko'rsatgani uchun yoqilmaydi.
+if DEBUG:
+    INSTALLED_APPS += ['silk']
+    MIDDLEWARE.insert(1, 'silk.middleware.SilkyMiddleware')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -130,7 +133,7 @@ DATABASES = {
         "PASSWORD": env.str("DB_PASSWORD"),
         "HOST": env.str("DB_HOST"),
         "PORT": env.str("DB_PORT"),
-        'CONN_MAX_AGE': 0,
+        'CONN_MAX_AGE': env.int('DB_CONN_MAX_AGE', default=60),
         'CONN_HEALTH_CHECKS': True,
     }
 }
@@ -219,3 +222,39 @@ CORS_ALLOWED_ORIGINS = env.list(
     default=['http://localhost:3000', 'http://127.0.0.1:3000'],
 )
 CORS_ALLOW_CREDENTIALS = True
+
+# JWT token muddatlari
+from datetime import timedelta  # noqa: E402
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=env.int('JWT_ACCESS_MINUTES', default=30)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=env.int('JWT_REFRESH_DAYS', default=7)),
+}
+
+# Production xavfsizlik sozlamalari (faqat DEBUG=False bo'lganda)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Nginx/traefik kabi reverse-proxy orqasida HTTPS aniqlash uchun
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Logging — xato va so'rovlarni konsolga chiqaradi
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {'format': '{levelname} {asctime} {name} {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'},
+    },
+    'root': {'handlers': ['console'], 'level': env.str('LOG_LEVEL', default='INFO')},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+    },
+}
