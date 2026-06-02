@@ -154,9 +154,10 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
             price=menu_item.price,
             subtotal=menu_item.price * quantity,
         )
-        self._recalculate_total(order)
+        items = list(order.items.all())
+        self._recalculate_total(order, items)
         # Yangi taom qo'shilganda buyurtma yana "tayyorlanmoqda" bo'ladi
-        self._sync_order_status(order)
+        self._sync_order_status(order, items)
         return Response(OrderDetailSerializer(order).data)
 
     def _replace_items(self, order, request):
@@ -183,8 +184,9 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
                     subtotal=menu_item.price * quantity,
                     status=existing_status.get(menu_item.id, OrderItemStatusChoices.PREPARING),
                 )
-            self._recalculate_total(order)
-            self._sync_order_status(order)
+            items = list(order.items.all())
+            self._recalculate_total(order, items)
+            self._sync_order_status(order, items)
         return Response(OrderDetailSerializer(order).data)
 
     @extend_schema(methods=['PATCH'], tags=['Orders'], summary="Taom miqdorini o'zgartirish",
@@ -204,9 +206,10 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
 
         if request.method == 'DELETE':
             item.delete()
-            self._recalculate_total(order)
+            items = list(order.items.all())
+            self._recalculate_total(order, items)
             # Taom o'chgach qolganlari yetkazilgan bo'lsa, buyurtma yetkazildi bo'ladi
-            self._sync_order_status(order)
+            self._sync_order_status(order, items)
             return Response(OrderDetailSerializer(order).data)
 
         serializer = OrderItemQuantityUpdateSerializer(data=request.data)
@@ -238,22 +241,26 @@ class OrderViewSet(BaseViewSetMixin, ModelViewSet):
         self._sync_order_status(order)
         return Response(OrderDetailSerializer(order).data)
 
-    def _recalculate_total(self, order):
+    def _recalculate_total(self, order, items=None):
         # Buyurtmada saqlangan xizmat haqidan foydalanamiz (sozlama keyin o'zgarsa ham summa o'zgarmaydi)
         service_fee_pct = order.service_fee or 0
 
-        subtotal = sum(item.price * item.quantity for item in order.items.all())
+        if items is None:
+            items = order.items.all()
+        subtotal = sum(item.price * item.quantity for item in items)
         order.total_amount = subtotal + (subtotal * service_fee_pct / 100)
         order.save(update_fields=['total_amount'])
 
-    def _sync_order_status(self, order):
+    def _sync_order_status(self, order, items=None):
         """Buyurtma statusini taomlar holatiga qarab avtomatik moslaydi.
         Hamma (bekor qilinmagan) taomlar yetkazilgan bo'lsa -> delivered,
         aks holda -> preparing. Yopilgan/bekor qilingan buyurtma o'zgarmaydi."""
         if order.status in (OrderStatusChoices.CLOSED, OrderStatusChoices.CANCELLED):
             return
 
-        active = [it for it in order.items.all()
+        if items is None:
+            items = order.items.all()
+        active = [it for it in items
                   if it.status != OrderItemStatusChoices.CANCELLED]
         if active and all(it.status == OrderItemStatusChoices.DELIVERED for it in active):
             new_status = OrderStatusChoices.DELIVERED
