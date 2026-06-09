@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 import environ
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -246,6 +247,7 @@ CORS_ALLOWED_ORIGINS = env.list(
     'CORS_ALLOWED_ORIGINS',
     default=['http://localhost:3000', 'http://127.0.0.1:3000'],
 )
+CORS_ALLOW_HEADERS = list(default_headers) + env.list('CORS_ALLOW_HEADERS_EXTRA', default=[])
 CORS_ALLOW_CREDENTIALS = True
 
 # JWT token muddatlari
