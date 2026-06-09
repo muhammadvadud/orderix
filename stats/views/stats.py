@@ -8,7 +8,7 @@ from django.utils.dateparse import parse_date
 from datetime import timedelta
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
-from order.models import Order, OrderItems, OrderStatusChoices
+from order.models import Order, OrderItems, OrderStatusChoices, OrderItemStatusChoices
 from accounts.models import UserRoleChoices
 from helpers.permissions import IsManagerOrAdmin
 from stats.serializers.stats import (
@@ -98,7 +98,8 @@ class TopItemsView(APIView):
         limit = max(1, min(limit, 50))
 
         qs = OrderItems.objects.filter(order__restaurant=restaurant).exclude(
-            order__status=OrderStatusChoices.CANCELLED)
+            order__status=OrderStatusChoices.CANCELLED,
+        ).exclude(status=OrderItemStatusChoices.CANCELLED)
 
         # Davr: date_from/date_to oraliq, range preseti yoki bitta sana (standart: today)
         date_from = parse_date(request.query_params.get('date_from') or '')
@@ -232,7 +233,9 @@ class ItemSeriesView(APIView):
             menu_item_id=menu_item_id,
             order__created__date__gte=start,
             order__created__date__lte=end,
-        ).exclude(order__status=OrderStatusChoices.CANCELLED)
+        ).exclude(order__status=OrderStatusChoices.CANCELLED).exclude(
+            status=OrderItemStatusChoices.CANCELLED,
+        )
 
         rows = qs.annotate(day=TruncDate('order__created')).values('day').annotate(
             qty=Sum('quantity'),
