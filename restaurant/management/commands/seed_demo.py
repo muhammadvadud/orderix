@@ -43,14 +43,27 @@ class Command(BaseCommand):
             ('+998931000004', 'cook_demo', 'Sardor Tursunov', UserRoleChoices.COOK, '#8E44AD'),
         ]
         for phone, username, full_name, role, color in staff:
-            user, created = Account.objects.get_or_create(
-                phone_number=phone,
-                defaults={'username': username, 'full_name': full_name, 'role': role,
-                          'color': color, 'restaurant': restaurant},
-            )
+            user = Account.objects.filter(phone_number=phone).first()
+            if user is None:
+                user = Account.objects.filter(username=username).first()
+            created = user is None
+            if created:
+                user = Account(
+                    phone_number=phone,
+                    username=username,
+                    full_name=full_name,
+                    role=role,
+                    color=color,
+                    restaurant=restaurant,
+                )
+            else:
+                user.full_name = user.full_name or full_name
+                user.role = user.role or role
+                user.color = user.color or color
+                user.restaurant = user.restaurant or restaurant
             if created:
                 user.set_password('demo12345')
-                user.save()
+            user.save()
 
     def _seed_locations(self, restaurant):
         zones_data = [
@@ -76,9 +89,47 @@ class Command(BaseCommand):
 
     def _seed_menu(self, restaurant):
         menu = {
-            ('Taomlar', 'UtensilsCrossed'): [('Osh', 35000), ('Lag\'mon', 30000), ('Manti', 28000)],
-            ('Ichimliklar', 'CupSoda'): [('Choy', 5000), ('Coca-Cola', 12000)],
-            ('Salatlar', 'Salad'): [('Achichuk', 15000), ('Sezar', 32000)],
+            ('Taomlar', 'UtensilsCrossed'): [
+                ('Osh', 35000), ('Lag\'mon', 30000), ('Manti', 28000),
+                ('Norin', 42000), ('Beshbarmoq', 58000),
+            ],
+            ('Sho\'rvalar', 'Soup'): [
+                ('Mastava', 28000), ('Sho\'rva', 32000), ('Chuchvara', 30000),
+                ('Moshxo\'rda', 27000), ('Tovuq sho\'rva', 29000),
+            ],
+            ('Shashliklar', 'Flame'): [
+                ('Mol go\'shti shashlik', 38000), ('Qo\'y shashlik', 42000),
+                ('Tovuq shashlik', 32000), ('Jigar shashlik', 28000),
+                ('Sabzavot shashlik', 22000),
+            ],
+            ('Salatlar', 'Salad'): [
+                ('Achichuk', 15000), ('Sezar', 32000), ('Grek salati', 30000),
+                ('Olivye', 26000), ('Suzma', 18000),
+            ],
+            ('Fast food', 'Utensils'): [
+                ('Lavash', 30000), ('Burger', 34000), ('Hot-dog', 22000),
+                ('Klab sendvich', 36000), ('Fri kartoshka', 18000),
+            ],
+            ('Non va somsa', 'Wheat'): [
+                ('Patir non', 8000), ('Tandir non', 6000), ('Go\'shtli somsa', 12000),
+                ('Tovuqli somsa', 11000), ('Qovoqli somsa', 9000),
+            ],
+            ('Shirinliklar', 'Cake'): [
+                ('Chak-chak', 22000), ('Pahlava', 26000), ('Medovik', 28000),
+                ('Napoleon', 30000), ('Muzqaymoq', 18000),
+            ],
+            ('Ichimliklar', 'CupSoda'): [
+                ('Choy', 5000), ('Coca-Cola', 12000), ('Fanta', 12000),
+                ('Limonad', 18000), ('Mineral suv', 8000),
+            ],
+            ('Qahva', 'Coffee'): [
+                ('Espresso', 16000), ('Americano', 18000), ('Cappuccino', 24000),
+                ('Latte', 26000), ('Raf coffee', 30000),
+            ],
+            ('Setlar', 'UtensilsCrossed'): [
+                ('Oilaviy set', 180000), ('Shashlik set', 210000), ('Milliy set', 240000),
+                ('Fast food set', 120000), ('Choyxona set', 260000),
+            ],
         }
         categories = {}
         for (cat_name, icon), items in menu.items():
