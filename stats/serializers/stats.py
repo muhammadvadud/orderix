@@ -47,7 +47,17 @@ class ItemSeriesPointSerializer(serializers.Serializer):
 class WaiterStatsSerializer(serializers.Serializer):
     orders_today = serializers.IntegerField()
     revenue_today = serializers.DecimalField(max_digits=15, decimal_places=2)
+    service_fee_today = serializers.DecimalField(max_digits=15, decimal_places=2)
     orders_week = serializers.IntegerField()
     revenue_week = serializers.DecimalField(max_digits=15, decimal_places=2)
+    service_fee_week = serializers.DecimalField(max_digits=15, decimal_places=2)
     active_orders = serializers.IntegerField()
     total_orders = serializers.IntegerField()
+
+
+class WaiterServiceFeeSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    waiter_id = serializers.IntegerField()
+    waiter_name = serializers.CharField()
+    orders = serializers.IntegerField()
+    service_fee = serializers.DecimalField(max_digits=15, decimal_places=2)

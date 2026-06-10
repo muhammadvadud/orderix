@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, Q
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -13,12 +13,26 @@ from accounts.models import UserRoleChoices
 from helpers.permissions import IsManagerOrAdmin
 from stats.serializers.stats import (
     DashboardSerializer, TopItemSerializer, SeriesPointSerializer, WaiterStatsSerializer,
-    ItemSeriesPointSerializer,
+    ItemSeriesPointSerializer, WaiterServiceFeeSerializer,
 )
 
 ACTIVE_STATUSES = [OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED]
 # tushumga kiradigan statuslar (bekor qilingani hisobga olinmaydi)
 REVENUE_STATUSES = [OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED, OrderStatusChoices.CLOSED]
+
+
+def _service_fee_amount(order):
+    items_subtotal = sum(
+        item.subtotal
+        for item in order.items.all()
+        if item.status != OrderItemStatusChoices.CANCELLED
+    )
+    amount = items_subtotal * (order.service_fee or 0) / 100
+    return amount if amount > 0 else 0
+
+
+def _service_fee_sum(orders):
+    return sum((_service_fee_amount(order) for order in orders), 0)
 
 
 def _percent_change(current, previous):
@@ -255,6 +269,58 @@ class ItemSeriesView(APIView):
         return Response({'status': True, 'message': 'OK', 'data': data})
 
 
+@extend_schema(tags=['Stats'], summary="Ofitsiantlar xizmat haqi hisoboti",
+               description="Yopilgan buyurtmalar bo'yicha kunlik ofitsiant xizmat haqi summalari. "
+                           "range: 7d | 30d | 90d yoki date_from/date_to (YYYY-MM-DD).",
+               parameters=[
+                   OpenApiParameter('range', str, description="7d | 30d | 90d (standart: 30d)"),
+                   OpenApiParameter('date_from', str, description="Boshlanish sanasi YYYY-MM-DD"),
+                   OpenApiParameter('date_to', str, description="Tugash sanasi YYYY-MM-DD"),
+               ],
+               responses=WaiterServiceFeeSerializer(many=True))
+class WaiterServiceFeesView(APIView):
+    permission_classes = [IsAuthenticated, IsManagerOrAdmin]
+
+    def get(self, request):
+        restaurant = request.user.restaurant
+
+        date_from = parse_date(request.query_params.get('date_from') or '')
+        date_to = parse_date(request.query_params.get('date_to') or '')
+        if date_from and date_to and date_from <= date_to:
+            start, end = date_from, date_to
+        else:
+            range_param = request.query_params.get('range', '30d')
+            days = {'7d': 7, '30d': 30, '90d': 90}.get(range_param, 30)
+            end = timezone.localdate()
+            start = end - timedelta(days=days - 1)
+
+        qs = Order.objects.filter(
+            restaurant=restaurant,
+            status=OrderStatusChoices.CLOSED,
+        ).filter(
+            Q(closed__date__gte=start, closed__date__lte=end) |
+            Q(closed__isnull=True, created__date__gte=start, created__date__lte=end)
+        ).select_related('waiter').prefetch_related('items').order_by('-closed', '-created')
+
+        grouped = {}
+        for order in qs:
+            day = timezone.localtime(order.closed).date() if order.closed else timezone.localtime(order.created).date()
+            key = (day, order.waiter_id)
+            if key not in grouped:
+                grouped[key] = {
+                    'date': day,
+                    'waiter_id': order.waiter_id,
+                    'waiter_name': order.waiter.full_name or order.waiter.username,
+                    'orders': 0,
+                    'service_fee': 0,
+                }
+            grouped[key]['orders'] += 1
+            grouped[key]['service_fee'] += _service_fee_amount(order)
+
+        data = sorted(grouped.values(), key=lambda x: (x['date'], x['waiter_name']), reverse=True)
+        return Response({'status': True, 'message': 'OK', 'data': data})
+
+
 @extend_schema(tags=['Stats'], summary="Ofitsiant statistikasi",
                description="Joriy ofitsiantning bugungi va haftalik buyurtma soni, tushumi hamda aktiv buyurtmalari.",
                responses=WaiterStatsSerializer)
@@ -270,12 +336,21 @@ class WaiterStatsView(APIView):
         base = Order.objects.filter(waiter=user, restaurant=restaurant).exclude(status=OrderStatusChoices.CANCELLED)
         today_qs = base.filter(created__date=today)
         week_qs = base.filter(created__date__gte=week_start)
+        closed_base = base.filter(status=OrderStatusChoices.CLOSED).prefetch_related('items')
+        service_fee_today = _service_fee_sum(closed_base.filter(
+            Q(closed__date=today) | Q(closed__isnull=True, created__date=today)
+        ))
+        service_fee_week = _service_fee_sum(closed_base.filter(
+            Q(closed__date__gte=week_start) | Q(closed__isnull=True, created__date__gte=week_start)
+        ))
 
         data = {
             'orders_today': today_qs.count(),
             'revenue_today': today_qs.aggregate(s=Sum('total_amount'))['s'] or 0,
+            'service_fee_today': service_fee_today,
             'orders_week': week_qs.count(),
             'revenue_week': week_qs.aggregate(s=Sum('total_amount'))['s'] or 0,
+            'service_fee_week': service_fee_week,
             'active_orders': Order.objects.filter(waiter=user, restaurant=restaurant, status__in=ACTIVE_STATUSES).count(),
             'total_orders': base.count(),
         }

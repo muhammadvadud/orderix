@@ -2,6 +2,7 @@ from django.urls import path
 
 from stats.views.stats import (
     DashboardView, TopItemsView, SeriesView, ItemSeriesView, WaiterStatsView,
+    WaiterServiceFeesView,
 )
 
 urlpatterns = [
@@ -9,5 +10,6 @@ urlpatterns = [
     path('stats/top-items', TopItemsView.as_view(), name='stats-top-items'),
     path('stats/series', SeriesView.as_view(), name='stats-series'),
     path('stats/item-series', ItemSeriesView.as_view(), name='stats-item-series'),
+    path('stats/waiter-service-fees', WaiterServiceFeesView.as_view(), name='stats-waiter-service-fees'),
     path('stats/waiter', WaiterStatsView.as_view(), name='stats-waiter'),
 ]
