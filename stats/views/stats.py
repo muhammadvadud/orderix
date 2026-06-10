@@ -17,8 +17,6 @@ from stats.serializers.stats import (
 )
 
 ACTIVE_STATUSES = [OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED]
-# tushumga kiradigan statuslar (bekor qilingani hisobga olinmaydi)
-REVENUE_STATUSES = [OrderStatusChoices.PREPARING, OrderStatusChoices.DELIVERED, OrderStatusChoices.CLOSED]
 
 
 def _service_fee_amount(order):
@@ -56,17 +54,15 @@ class DashboardView(APIView):
         yesterday = today - timedelta(days=1)
 
         base = Order.objects.filter(restaurant=restaurant)
-        today_qs = base.filter(created__date=today)
-        yesterday_qs = base.filter(created__date=yesterday)
+        today_qs = base.filter(status=OrderStatusChoices.CLOSED, closed__date=today)
+        yesterday_qs = base.filter(status=OrderStatusChoices.CLOSED, closed__date=yesterday)
 
-        orders_today = today_qs.exclude(status=OrderStatusChoices.CANCELLED).count()
-        revenue_today = today_qs.filter(status__in=REVENUE_STATUSES).aggregate(
-            s=Sum('total_amount'))['s'] or 0
-        orders_yesterday = yesterday_qs.exclude(status=OrderStatusChoices.CANCELLED).count()
-        revenue_yesterday = yesterday_qs.filter(status__in=REVENUE_STATUSES).aggregate(
-            s=Sum('total_amount'))['s'] or 0
+        orders_today = today_qs.count()
+        revenue_today = today_qs.aggregate(s=Sum('total_amount'))['s'] or 0
+        orders_yesterday = yesterday_qs.count()
+        revenue_yesterday = yesterday_qs.aggregate(s=Sum('total_amount'))['s'] or 0
 
-        active_waiters = today_qs.filter(status__in=ACTIVE_STATUSES).values('waiter').distinct().count()
+        active_waiters = base.filter(created__date=today, status__in=ACTIVE_STATUSES).values('waiter').distinct().count()
         open_orders = base.filter(status__in=ACTIVE_STATUSES).count()
 
         recent = base.select_related('waiter', 'location').order_by('-created')[:10]
@@ -111,8 +107,9 @@ class TopItemsView(APIView):
             limit = 10
         limit = max(1, min(limit, 50))
 
-        qs = OrderItems.objects.filter(order__restaurant=restaurant).exclude(
-            order__status=OrderStatusChoices.CANCELLED,
+        qs = OrderItems.objects.filter(
+            order__restaurant=restaurant,
+            order__status=OrderStatusChoices.CLOSED,
         ).exclude(status=OrderItemStatusChoices.CANCELLED)
 
         # Davr: date_from/date_to oraliq, range preseti yoki bitta sana (standart: today)
@@ -121,18 +118,18 @@ class TopItemsView(APIView):
         range_param = request.query_params.get('range')
 
         if date_from and date_to and date_from <= date_to:
-            qs = qs.filter(order__created__date__gte=date_from,
-                           order__created__date__lte=date_to)
+            qs = qs.filter(order__closed__date__gte=date_from,
+                           order__closed__date__lte=date_to)
         elif range_param in ('7d', '30d', '90d'):
             days = {'7d': 7, '30d': 30, '90d': 90}[range_param]
             start = timezone.localdate() - timedelta(days=days - 1)
-            qs = qs.filter(order__created__date__gte=start)
+            qs = qs.filter(order__closed__date__gte=start)
         else:
             date_param = request.query_params.get('date', 'today')
             if date_param == 'today':
-                qs = qs.filter(order__created__date=timezone.localdate())
+                qs = qs.filter(order__closed__date=timezone.localdate())
             elif date_param:
-                qs = qs.filter(order__created__date=date_param)
+                qs = qs.filter(order__closed__date=date_param)
 
         rows = qs.values('menu_item').annotate(
             name=F('menu_item__name'),
@@ -183,11 +180,12 @@ class SeriesView(APIView):
 
         qs = Order.objects.filter(
             restaurant=restaurant,
-            created__date__gte=start,
-            created__date__lte=end,
-        ).exclude(status=OrderStatusChoices.CANCELLED)
+            status=OrderStatusChoices.CLOSED,
+            closed__date__gte=start,
+            closed__date__lte=end,
+        )
 
-        rows = qs.annotate(day=TruncDate('created')).values('day').annotate(
+        rows = qs.annotate(day=TruncDate('closed')).values('day').annotate(
             revenue=Sum('total_amount'),
             orders=Count('id'),
         ).order_by('day')
@@ -244,14 +242,13 @@ class ItemSeriesView(APIView):
 
         qs = OrderItems.objects.filter(
             order__restaurant=restaurant,
+            order__status=OrderStatusChoices.CLOSED,
             menu_item_id=menu_item_id,
-            order__created__date__gte=start,
-            order__created__date__lte=end,
-        ).exclude(order__status=OrderStatusChoices.CANCELLED).exclude(
-            status=OrderItemStatusChoices.CANCELLED,
-        )
+            order__closed__date__gte=start,
+            order__closed__date__lte=end,
+        ).exclude(status=OrderItemStatusChoices.CANCELLED)
 
-        rows = qs.annotate(day=TruncDate('order__created')).values('day').annotate(
+        rows = qs.annotate(day=TruncDate('order__closed')).values('day').annotate(
             qty=Sum('quantity'),
             revenue=Sum('subtotal'),
         ).order_by('day')
@@ -334,8 +331,8 @@ class WaiterStatsView(APIView):
         week_start = today - timedelta(days=6)
 
         base = Order.objects.filter(waiter=user, restaurant=restaurant).exclude(status=OrderStatusChoices.CANCELLED)
-        today_qs = base.filter(created__date=today)
-        week_qs = base.filter(created__date__gte=week_start)
+        today_qs = base.filter(status=OrderStatusChoices.CLOSED, closed__date=today)
+        week_qs = base.filter(status=OrderStatusChoices.CLOSED, closed__date__gte=week_start)
         closed_base = base.filter(status=OrderStatusChoices.CLOSED).prefetch_related('items')
         service_fee_today = _service_fee_sum(closed_base.filter(
             Q(closed__date=today) | Q(closed__isnull=True, created__date=today)
