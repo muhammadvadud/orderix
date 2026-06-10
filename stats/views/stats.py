@@ -263,10 +263,11 @@ class WaiterStatsView(APIView):
 
     def get(self, request):
         user = request.user
+        restaurant = user.restaurant
         today = timezone.localdate()
         week_start = today - timedelta(days=6)
 
-        base = Order.objects.filter(waiter=user).exclude(status=OrderStatusChoices.CANCELLED)
+        base = Order.objects.filter(waiter=user, restaurant=restaurant).exclude(status=OrderStatusChoices.CANCELLED)
         today_qs = base.filter(created__date=today)
         week_qs = base.filter(created__date__gte=week_start)
 
@@ -275,7 +276,7 @@ class WaiterStatsView(APIView):
             'revenue_today': today_qs.aggregate(s=Sum('total_amount'))['s'] or 0,
             'orders_week': week_qs.count(),
             'revenue_week': week_qs.aggregate(s=Sum('total_amount'))['s'] or 0,
-            'active_orders': Order.objects.filter(waiter=user, status__in=ACTIVE_STATUSES).count(),
+            'active_orders': Order.objects.filter(waiter=user, restaurant=restaurant, status__in=ACTIVE_STATUSES).count(),
             'total_orders': base.count(),
         }
         return Response({'status': True, 'message': 'OK', 'data': data})
